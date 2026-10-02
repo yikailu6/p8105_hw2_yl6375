@@ -1,0 +1,11 @@
+---
+title: "P8105 Homework 2"
+author: "Yikai Lu"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
