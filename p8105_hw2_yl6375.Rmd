@@ -94,6 +94,259 @@ nyc_transit_long |>
 #Of the stations that serve the A train, 17 are ADA compliant.
 
 
+#Problem 2
+```{r}
+library(readxl)
+
+mr_trash =
+  read_excel(
+    "./data/202509 Trash Wheel Collection Data.xlsx",
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N1170"
+  ) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+  sports_balls = as.integer(round(sports_balls)),
+  trash_wheel = "Mr. Trash Wheel"
+  )
+mr_trash
+```
+```{r}
+professor_trash =
+  read_excel(
+    "./data/202509 Trash Wheel Collection Data.xlsx",
+    sheet = "Professor Trash Wheel"
+  ) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    trash_wheel = "Professor Trash Wheel"
+  )
+
+professor_trash
+```
+```{r}
+gwynnda_trash =
+  read_excel(
+    "./data/202509 Trash Wheel Collection Data.xlsx",
+    sheet = "Gwynns Falls Trash Wheel"
+  ) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    trash_wheel = "Gwynns Falls Trash Wheel"
+  )
+
+gwynnda_trash
+```
+```{r}
+mr_trash =
+  mr_trash |>
+  mutate(year = as.numeric(year))
+
+professor_trash =
+  professor_trash |>
+  mutate(year = as.numeric(year))
+
+gwynnda_trash =
+  gwynnda_trash |>
+  mutate(year = as.numeric(year))
+
+trash_wheel =
+  bind_rows(
+    mr_trash,
+    professor_trash,
+    gwynnda_trash
+  )
+
+trash_wheel
+```
+```{r}
+trash_wheel |>
+  filter(trash_wheel == "Professor Trash Wheel") |>
+  pull(weight_tons) |>
+  sum(na.rm = TRUE)
+trash_wheel |>
+  filter(
+    trash_wheel == "Gwynns Falls Trash Wheel",
+    month == "June",
+    year == 2022
+  ) |>
+  pull(cigarette_butts) |>
+  sum(na.rm = TRUE)
+```
+#The combined Trash Wheel dataset contains 1,188 observations and 15 variables. The data include information about each dumpster collection, such as the dumpster number, month, year, date, weight in tons, volume in cubic yards, plastic bottles, and cigarette butts. The data from Mr. Trash Wheel, Professor Trash Wheel, and Gwynns Falls Trash Wheel were imported, cleaned, and combined into one dataset. A variable was added to identify each Trash Wheel. Based on the available data, Professor Trash Wheel collected a total of 282.26 tons of trash. Gwynns Falls Trash Wheel collected 18,120 cigarette butts in June 2022.
+
+#Problem 3
+```{r}
+baseline =
+  read_csv(
+    "./data/MCI_baseline.csv",
+    skip = 1
+  ) |>
+  janitor::clean_names()
+
+baseline
+names(baseline)
+```
+```{r}
+#clean data
+baseline =
+  baseline |>
+  mutate(
+    age_at_onset = na_if(age_at_onset, "."),
+    age_at_onset = as.numeric(age_at_onset),
+    sex = factor(
+      sex,
+      levels = c(0, 1),
+      labels = c("Female", "Male")
+    ),
+    apoe4 = factor(
+      apoe4,
+      levels = c(0, 1),
+      labels = c("Non-carrier", "Carrier")
+    )
+  ) |>
+  filter(
+    is.na(age_at_onset) | age_at_onset > current_age
+  )
+
+baseline
+
+```
+```{r}
+#participants
+nrow(baseline)
+```
+```{r}
+# Number of participants
+nrow(baseline)
+
+# Number who developed MCI
+baseline |>
+  filter(!is.na(age_at_onset)) |>
+  nrow()
+
+# Average baseline age
+baseline |>
+  summarize(
+    mean_age = mean(current_age, na.rm = TRUE)
+  )
+
+# Proportion of women who are APOE4 carriers
+baseline |>
+  filter(sex == "Female") |>
+  summarize(
+    proportion_apoe4 = mean(apoe4 == "Carrier", na.rm = TRUE)
+  )
+```
+#The baseline demographic dataset was imported and cleaned by removing participants who had MCI at baseline. Sex and APOE4 carrier status were converted from numeric variables to categorical variables. After applying the inclusion criteria, the dataset contained 479 participants. Among these participants, 93 developed MCI during the follow-up period. The average baseline age was approximately 65.03 years. Among women in the study, 30% were APOE4 carriers.
+
+```{r}
+amyloid =
+  read_csv(
+    "./data/mci_amyloid.csv",
+    skip = 1
+  ) |>
+  janitor::clean_names()
+
+amyloid
+names(amyloid)
+```
+```{r}
+#Tidy the amyloid data
+amyloid_long =
+  amyloid_long |>
+  mutate(
+    amyloid_ratio = na_if(amyloid_ratio, "Na"),
+    amyloid_ratio = as.numeric(amyloid_ratio)
+  )
+
+amyloid_long
+```
+
+```{r}
+# Rename ID variable
+amyloid_long =
+  amyloid_long |>
+  rename(id = study_id)
+
+# Participants only in baseline data
+baseline_only =
+  anti_join(
+    baseline,
+    amyloid_long,
+    by = "id"
+  )
+
+# Participants only in amyloid data
+amyloid_only =
+  anti_join(
+    amyloid_long,
+    baseline,
+    by = "id"
+  )
+
+baseline_only
+
+amyloid_only
+```
+```{r}
+# Number of participants only in baseline data
+baseline_only |>
+  distinct(id) |>
+  nrow()
+
+# Number of participants only in amyloid data
+amyloid_only |>
+  distinct(id) |>
+  nrow()
+```
+```{r}
+# Combine baseline and amyloid data
+combined_data =
+  inner_join(
+    baseline,
+    amyloid_long,
+    by = "id"
+  )
+
+combined_data
+
+# Check dimensions
+dim(combined_data)
+
+# Number of unique participants
+combined_data |>
+  distinct(id) |>
+  nrow()
+```
+```{r}
+# Export the combined dataset
+write_csv(
+  combined_data,
+  "./data/mci_combined.csv"
+)
+```
+#There were 8 participants who appeared only in the baseline dataset and 16 participants who appeared only in the amyloid dataset. I used an inner join to retain only participants who appeared in both datasets. The resulting dataset contains 471 unique participants, 2,355 observations, and 8 variables. Each participant has up to five amyloid measurement occasions: baseline, time 2, time 4, time 6, and time 8. The combined dataset was exported as a CSV file to the data directory.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
