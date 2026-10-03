@@ -4,6 +4,69 @@ author: "Yikai Lu"
 date: "`r Sys.Date()`"
 output: github_document
 ---
+# Problem 1
+```{r}
+library(tidyverse)
+
+nyc_transit =
+  read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") |>
+  janitor::clean_names() |>
+  select(
+    line,
+    station_name,
+    station_latitude,
+    station_longitude,
+    route1:route11,
+    entry,
+    vending,
+    entrance_type,
+    ada
+  ) |>
+  mutate(
+    entry = case_match(
+      entry,
+      "YES" ~ TRUE,
+      "NO" ~ FALSE
+    )
+  )
+
+```
+#The NYC Transit dataset contains information about subway station entrances and exits, including the subway line, station name, station latitude and longitude, routes served, entry status, vending availability, entrance type, and ADA compliance. I have cleaned the data like what we did in class, I clean by cleaning the variable names, selecting only the variables needed for this problem, and converting the entry variable from a character variable (YES or NO) to a logical variable (TRUE or FALSE). After cleaning the data, the dataset contains 1,868 rows and 19 columns. 
+
+```{r}
+#How many station
+nyc_transit |>
+  distinct(line, station_name)
+nyc_transit |>
+  distinct(line, station_name) |>
+  nrow()
+```
+
+#There are 465 distinct subway stations, where a station is identified by the combination of line and station_name.
+
+```{r}
+nyc_transit |>
+  filter(ada == TRUE) |>
+  distinct(line, station_name) |>
+  nrow()
+```
+#There are 84 distinct ADA-compliant stations.
+
+```{r}
+# Proportion of entrances / exits without vending that allow entrance
+nyc_transit |>
+  filter(vending == "NO") |>
+  pull(entry) |>
+  mean()
+```
+#The proportion of station entrances/exits without vending that allow entrance is 0.377, or approximately 37.7%
+
+
+
+
+
+
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
