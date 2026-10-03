@@ -259,7 +259,6 @@ names(amyloid)
 amyloid_long =
   amyloid_long |>
   mutate(
-    amyloid_ratio = na_if(amyloid_ratio, "Na"),
     amyloid_ratio = as.numeric(amyloid_ratio)
   )
 
