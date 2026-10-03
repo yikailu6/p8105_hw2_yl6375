@@ -115,7 +115,7 @@ mr_trash
 ```{r}
 professor_trash =
   read_excel(
-    "./data/202509 Trash Wheel Collection Data.xlsx",
+    "./data/202610 Trash Wheel Collection Data.xlsx",
     sheet = "Professor Trash Wheel"
   ) |>
   janitor::clean_names() |>
@@ -126,21 +126,57 @@ professor_trash =
 
 professor_trash
 ```
+
 ```{r}
-gwynnda_trash =
+# Import Mr. Trash Wheel data
+mr_trash =
   read_excel(
-    "./data/202509 Trash Wheel Collection Data.xlsx",
-    sheet = "Gwynns Falls Trash Wheel"
+    "./data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Mr. Trash Wheel"
   ) |>
   janitor::clean_names() |>
   drop_na(dumpster) |>
   mutate(
-    trash_wheel = "Gwynns Falls Trash Wheel"
+    trash_wheel = "Mr. Trash Wheel"
+  )
+
+mr_trash
+```
+```{r}
+# Import Captain Trash Wheel data
+# Import Captain Trash Wheel data
+captain_trash =
+  read_excel(
+    "./data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Captain Trash Wheel",
+    skip = 1
+  ) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    trash_wheel = "Captain Trash Wheel"
+  )
+
+captain_trash
+```
+```{r}
+# Import Gwynnda the Good Wheel of the West data
+gwynnda_trash =
+  read_excel(
+    "./data/202610 Trash Wheel Collection Data.xlsx",
+    sheet = "Gwynnda the Good Wheel of the W"
+  ) |>
+  janitor::clean_names() |>
+  drop_na(dumpster) |>
+  mutate(
+    trash_wheel = "Gwynnda the Good Wheel of the West"
   )
 
 gwynnda_trash
 ```
 ```{r}
+# Combine all Trash Wheel datasets
+# Make year the same type in all datasets
 mr_trash =
   mr_trash |>
   mutate(year = as.numeric(year))
@@ -149,34 +185,75 @@ professor_trash =
   professor_trash |>
   mutate(year = as.numeric(year))
 
+captain_trash =
+  captain_trash |>
+  mutate(year = as.numeric(year))
+
 gwynnda_trash =
   gwynnda_trash |>
   mutate(year = as.numeric(year))
 
-trash_wheel =
+# Make plastic_bottles the same type in all datasets
+mr_trash =
+  mr_trash |>
+  mutate(plastic_bottles = as.numeric(plastic_bottles))
+
+professor_trash =
+  professor_trash |>
+  mutate(plastic_bottles = as.numeric(plastic_bottles))
+
+captain_trash =
+  captain_trash |>
+  mutate(plastic_bottles = as.numeric(plastic_bottles))
+
+gwynnda_trash =
+  gwynnda_trash |>
+  mutate(plastic_bottles = as.numeric(plastic_bottles))
+
+trash_data =
   bind_rows(
     mr_trash,
     professor_trash,
+    captain_trash,
     gwynnda_trash
   )
 
-trash_wheel
+trash_data
+
+dim(trash_data)
 ```
 ```{r}
-trash_wheel |>
+# Remove empty columns
+trash_data =
+  trash_data |>
+  select(-x15, -x16)
+
+trash_data
+
+dim(trash_data)
+```
+```{r}
+trash_data |>
   filter(trash_wheel == "Professor Trash Wheel") |>
-  pull(weight_tons) |>
-  sum(na.rm = TRUE)
-trash_wheel |>
+  summarize(
+    total_weight = sum(weight_tons, na.rm = TRUE)
+  )
+```
+```{r}
+trash_data |>
   filter(
-    trash_wheel == "Gwynns Falls Trash Wheel",
+    trash_wheel == "Gwynnda the Good Wheel of the West",
     month == "June",
     year == 2022
   ) |>
-  pull(cigarette_butts) |>
-  sum(na.rm = TRUE)
+  summarize(
+    total_cigarette_butts = sum(cigarette_butts, na.rm = TRUE)
+  )
 ```
-#The combined Trash Wheel dataset contains 1,188 observations and 15 variables. The data include information about each dumpster collection, such as the dumpster number, month, year, date, weight in tons, volume in cubic yards, plastic bottles, and cigarette butts. The data from Mr. Trash Wheel, Professor Trash Wheel, and Gwynns Falls Trash Wheel were imported, cleaned, and combined into one dataset. A variable was added to identify each Trash Wheel. Based on the available data, Professor Trash Wheel collected a total of 282.26 tons of trash. Gwynns Falls Trash Wheel collected 18,120 cigarette butts in June 2022.
+#The combined Trash Wheel dataset contains 1,309 observations and 15 variables. The data include information about the date of each collection, the weight and volume of trash collected, different types of trash, and the Trash Wheel that collected it. The total weight of trash collected by Professor Trash Wheel was 294.96 tons. In June 2022, Gwynnda the Good Wheel of the West collected a total of 18,120 cigarette butts.
+
+
+
 
 #Problem 3
 ```{r}
@@ -257,7 +334,12 @@ names(amyloid)
 ```{r}
 #Tidy the amyloid data
 amyloid_long =
-  amyloid_long |>
+  amyloid |>
+  pivot_longer(
+    baseline:time_8,
+    names_to = "visit",
+    values_to = "amyloid_ratio"
+  ) |>
   mutate(
     amyloid_ratio = as.numeric(amyloid_ratio)
   )
