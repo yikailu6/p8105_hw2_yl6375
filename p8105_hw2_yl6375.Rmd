@@ -292,6 +292,8 @@ baseline_only
 
 amyloid_only
 ```
+#The amyloid dataset was imported from mci_amyloid.csv. The first row was skipped because it contained descriptive labels rather than observations. The data were converted from wide to long format so that each row represents one participant at one measurement occasion. The measurement occasions are baseline, time 2, time 4, time 6, and time 8. The value "Na" was converted to a missing value (NA), and amyloid ratio was converted to a numeric variable.
+
 ```{r}
 # Number of participants only in baseline data
 baseline_only |>
