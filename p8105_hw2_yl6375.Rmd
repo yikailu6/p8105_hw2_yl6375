@@ -27,7 +27,8 @@ nyc_transit =
       entry,
       "YES" ~ TRUE,
       "NO" ~ FALSE
-    )
+    ),
+    across(route1:route11, as.character)
   )
 
 ```
@@ -60,6 +61,40 @@ nyc_transit |>
   mean()
 ```
 #The proportion of station entrances/exits without vending that allow entrance is 0.377, or approximately 37.7%
+
+```{r}
+nyc_transit_long =
+  nyc_transit |>
+  pivot_longer(
+    route1:route11,
+    names_to = "route_number",
+    values_to = "route_name"
+  )
+nyc_transit_long
+# Number of distinct stations that serve the A train
+nyc_transit_long |>
+  filter(route_name == "A") |>
+  distinct(line, station_name) |>
+  nrow()
+```
+
+#There are 60 distinct stations that serve the A train.
+
+```{r}
+# Number of ADA-compliant stations that serve the A train
+nyc_transit_long |>
+  filter(
+    route_name == "A",
+    ada == TRUE
+  ) |>
+  distinct(line, station_name) |>
+  nrow()
+
+```
+#Of the stations that serve the A train, 17 are ADA compliant.
+
+
+
 
 
 
