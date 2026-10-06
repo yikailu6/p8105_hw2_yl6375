@@ -95,24 +95,9 @@ nyc_transit_long |>
 
 
 #Problem 2
+
 ```{r}
 library(readxl)
-
-mr_trash =
-  read_excel(
-    "./data/202509 Trash Wheel Collection Data.xlsx",
-    sheet = "Mr. Trash Wheel",
-    range = "A2:N1170"
-  ) |>
-  janitor::clean_names() |>
-  drop_na(dumpster) |>
-  mutate(
-  sports_balls = as.integer(round(sports_balls)),
-  trash_wheel = "Mr. Trash Wheel"
-  )
-mr_trash
-```
-```{r}
 professor_trash =
   read_excel(
     "./data/202610 Trash Wheel Collection Data.xlsx",
